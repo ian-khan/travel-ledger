@@ -1,3 +1,7 @@
+from pathlib import Path
+
+STATE_FILE = Path("travel_ledger_last.json")
+
 COLUMNS = {
     "id": ("INTEGER PRIMARY KEY AUTOINCREMENT",""),
     "date": ("TEXT NOT NULL", "Date (YYYY-MM-DD)"),
