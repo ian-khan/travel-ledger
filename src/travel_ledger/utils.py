@@ -1,7 +1,7 @@
 from travel_ledger.config import COLUMNS
 
 def get_create_table_cmd():
-    columns = ",\n    ".join(f"{col} {type_}" for col, type_ in COLUMNS.items())
+    columns = ",\n    ".join(f"{col} {type_}" for col, (type_, desc) in COLUMNS.items())
     create_table_cmd = f"CREATE TABLE IF NOT EXISTS expenses (\n    {columns}\n)"
     return create_table_cmd
 
