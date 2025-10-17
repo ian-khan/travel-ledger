@@ -17,3 +17,4 @@ where = ["src"]
 travel-ledger = "travel_ledger.main:main"
 travel-ledger-init = "travel_ledger.main:main_init"
 travel-ledger-add = "travel_ledger.main:main_add"
+travel-ledger-edit = "travel_ledger.main:main_edit"

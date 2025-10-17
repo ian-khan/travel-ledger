@@ -2,13 +2,20 @@ import os.path as osp
 from copy import deepcopy
 from travel_ledger.config import COLUMNS, STATE_FILE
 from travel_ledger.state import load_last_values, save_last_values
-from travel_ledger.transactions import init_db, add_expense
+from travel_ledger.transactions import init_db, insert_expense, fetch_expense_with_id, update_expense
+
+def main_init():
+    print("Initializing database...")
+    db_path = input("Enter the database path: ").strip()
+    init_db(db_path)
+    print("Database initialized")
+
 
 def main_add():
-    print("Adding expenses")
+    print("Adding expenses...")
     db_path = input("Enter the database path: ").strip()
     # The database to add record into must exist
-    assert osp.isfile(db_path), f"File {db_path} does not exist"
+    assert osp.isfile(db_path), f"File {db_path} does not exist, check for typo!"
     columns = deepcopy(COLUMNS)
     # the 'id' column is set automatically
     columns.pop("id", None)
@@ -19,7 +26,7 @@ def main_add():
     while add_more == 'y':
         for col, (type_, desc) in columns.items():
             # create prompt with optional default value
-            prompt = f"{desc}"
+            prompt = f"  {desc}"
             last_val = kwargs.get(col, None)
             if last_val is not None:
                 prompt += f" [{last_val}]"
@@ -33,7 +40,7 @@ def main_add():
                 # explicitly clear the value
                 val = ""
             kwargs.update({col: val})
-        add_expense(db_path, **kwargs)
+        insert_expense(db_path, **kwargs)
         print("\nExpense added!")
         # save the values of the current record
         save_last_values(STATE_FILE, kwargs)
@@ -42,17 +49,69 @@ def main_add():
             if add_more == 'y' or add_more == 'n':
                 break
 
-def main_init():
+
+def main_edit():
+    print("Editing expenses...")
     db_path = input("Enter the database path: ").strip()
-    init_db(db_path)
-    print("Database initialized")
+    # The database to add record into must exist
+    assert osp.isfile(db_path), f"File {db_path} does not exist, check for typo!"
+    columns = deepcopy(COLUMNS)
+    # the 'id' column should not be edited
+    columns.pop("id", None)
+    print("\nTip: The value in [] is the current value.",
+          "\n     Press Enter to keep it; or '-' to explicitly clear it.\n")
+    edit_more = 'y'
+    while edit_more == 'y':
+        try:
+            id_ = int(input("Enter the id of the expense to edit: ").strip())
+        except ValueError:
+            print("Invalid ID: please enter a number.\n")
+            continue
+        row = fetch_expense_with_id(db_path, id_)
+        if row is None:
+            print(f"\nNo expense with id {id_}.")
+            while True:
+                abort = input("Abort editing? [y/N] ").lower()
+                if abort == 'y':
+                    return
+                elif abort == 'n':
+                    break
+            continue
+        record = dict(zip(COLUMNS.keys(), row))
+        print("Current record:")
+        for col, val in record.items():
+            print(f"  {col}: {val}")
+        print("\nEditing record:")
+        kwargs = {}
+        for col, (type_, desc) in columns.items():
+            prompt = f"  {desc} [{record[col]}]: "
+            new_val = input(prompt).strip()
+            if new_val == "":
+                continue
+            elif new_val == "-":
+                new_val = ""
+            kwargs.update({col: new_val})
+        if not kwargs:
+            print(f"\nNo changes made!")
+        else:
+            update_expense(db_path, id_, **kwargs)
+            print("\nExpense edited!")
+        while True:
+            edit_more = input("\nEdit another expense? [y/N] ").lower()
+            if edit_more == 'y' or edit_more == 'n':
+                break
+
 
 def main():
     print("Travel Ledger")
     print("1. Initialize database")
     print("2. Add expense")
+    print("3. List expense")
+    print("4. Edit expense")
     choice = input("Enter your choice: ").strip()
     if choice == "1":
         main_init()
     elif choice == "2":
         main_add()
+    elif choice == "4":
+        main_edit()
