@@ -16,6 +16,6 @@ COLUMNS = {
     "notes": ("TEXT", "Notes"),
 }
 
-PAYERS = ("ian", "momo")
-METHODS = ("cash", "wechat", "alipay", "credit card", "others")
-CATEGORIES = ("accommodation", "transport", "food and drinks", "admission", "shopping", "others")
+PAYERS = ("Ian", "Momo")
+METHODS = ("Cash", "Wechat", "Alipay", "Credit Card")
+CATEGORIES = ("Accommodation", "Transport", "Food and Drinks", "Admission", "Shopping", "Others")

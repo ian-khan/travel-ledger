@@ -1,6 +1,7 @@
 ########## Custom gitignore ##########
 /*.db
 /*.json
+/*.xlsx
 
 ########## Python gitignore ##########
 # Byte-compiled / optimized / DLL files
