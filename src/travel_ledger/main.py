@@ -1,15 +1,14 @@
 import os.path as osp
 from copy import deepcopy
-from unittest import case
 
 from travel_ledger.config import COLUMNS, STATE_FILE
-from travel_ledger.state import load_last_values, save_last_values
-from travel_ledger.validator import validate_and_format_values
-from travel_ledger.transactions import init_db, insert_expense, fetch_expense_with_id, update_expense
-from travel_ledger.export import export_to_excel
+from travel_ledger.core.state import load_last_values, save_last_values
+from travel_ledger.core.validator import validate_and_format_values
+from travel_ledger.db.operations import create_table, insert_record, fetch_record_with_id, update_record
+from travel_ledger.db.export import export_to_excel
 
 def main_create(db_path: str):
-    init_db(db_path)
+    create_table(db_path)
     print("Database initialized")
 
 
@@ -47,7 +46,7 @@ def main_insert(db_path: str):
             print(e)
             input("Press Enter to continue...")
             continue
-        insert_expense(db_path, **kwargs)
+        insert_record(db_path, **kwargs)
         print("\nExpense added!")
         # save the values of the current record
         save_last_values(STATE_FILE, kwargs)
@@ -72,7 +71,7 @@ def main_update(db_path: str):
         except ValueError:
             print("Invalid ID: please enter a number.")
             continue
-        row = fetch_expense_with_id(db_path, id_)
+        row = fetch_record_with_id(db_path, id_)
         if row is None:
             print(f"\nNo expense with id {id_}.")
             while True:
@@ -106,7 +105,7 @@ def main_update(db_path: str):
                 print(e)
                 input("Press Enter to continue...")
                 continue
-            update_expense(db_path, id_, **kwargs)
+            update_record(db_path, id_, **kwargs)
             print("\nExpense edited!")
         while True:
             edit_more = input("\nEdit another expense? [y/N] ").lower()
