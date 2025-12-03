@@ -15,9 +15,11 @@ def main_create(db_path: str):
 def main_insert(db_path: str):
     assert osp.isfile(db_path), f"Database {db_path} does not exist!"
     columns = deepcopy(COLUMNS)
-    # the 'id' column is set automatically
+    # The 'id' field should not be set manually
     columns.pop("id", None)
 
+    # Load the last inserted record
+    # last_record should not contain the 'id' field
     last_record = load_state_file(STATE_FILE)
 
     print("\nTip: Press Enter to reuse [values in the last record]"

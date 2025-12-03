@@ -6,9 +6,15 @@ def build_create_table_stmt():
     return create_table_cmd
 
 def build_insert_stmt_params(record):
+    """
+    Build the INSERT statement and its parameters. Example:
+    INSERT INTO table_name (column1, column2, column3, ...)
+    VALUES (value1, value2, value3, ...);
+    :param record:
+    :return:
+    """
     cols = []
     vals = []
-    record.pop('id', None)
     for col, val in record.items():
         if col in COLUMNS:
             cols.append(col)
