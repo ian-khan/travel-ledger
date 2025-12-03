@@ -5,11 +5,11 @@ def build_create_table_stmt():
     create_table_cmd = f"CREATE TABLE IF NOT EXISTS expenses (\n    {columns}\n)"
     return create_table_cmd
 
-def build_insert_stmt_params(**kwargs):
+def build_insert_stmt_params(record):
     cols = []
     vals = []
-    kwargs.pop('id', None)
-    for col, val in kwargs.items():
+    record.pop('id', None)
+    for col, val in record.items():
         if col in COLUMNS:
             cols.append(col)
             vals.append(val)

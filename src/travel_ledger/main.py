@@ -2,7 +2,7 @@ import os.path as osp
 from copy import deepcopy
 
 from travel_ledger.config import COLUMNS, STATE_FILE
-from travel_ledger.core.state import load_last_values, save_last_values
+from travel_ledger.core.state import load_state_file, save_state_file
 from travel_ledger.core.validator import validate_and_format_values
 from travel_ledger.db.operations import create_table, insert_record, fetch_record_with_id, update_record
 from travel_ledger.db.export import export_to_excel
@@ -13,23 +13,26 @@ def main_create(db_path: str):
 
 
 def main_insert(db_path: str):
-    # The database to add record into must exist
-    assert osp.isfile(db_path), f"File {db_path} does not exist, check for typo!"
+    assert osp.isfile(db_path), f"Database {db_path} does not exist!"
     columns = deepcopy(COLUMNS)
     # the 'id' column is set automatically
     columns.pop("id", None)
-    kwargs = load_last_values(STATE_FILE)
-    print("\nTip: The value in [] is the one used for the last record.",
-          "\n     Press Enter to reuse it; or '-' to explicitly clear it.")
-    add_more = 'y'
-    while add_more == 'y':
-        print("")
+
+    last_record = load_state_file(STATE_FILE)
+
+    print("\nTip: Press Enter to reuse [values in the last record]"
+          "\n     Press '-'   to clear the values")
+
+    # Recursively insert multiple records
+    add_more = True
+    while add_more:
+        print()
         for col, (type_, desc) in columns.items():
             # create prompt with optional default value
             prompt = f"  {desc}"
-            last_val = kwargs.get(col, None)
+            last_val = last_record.get(col, None)
             if last_val is not None:
-                prompt += f" [{last_val}]"
+                prompt += f"[{last_val}]"
             prompt += ": "
 
             val = input(prompt).strip()
@@ -39,21 +42,26 @@ def main_insert(db_path: str):
             elif val == "-":
                 # explicitly clear the value
                 val = ""
-            kwargs.update({col: val})
+            last_record.update({col: val})
+
         try:
-            kwargs = validate_and_format_values(**kwargs)
+            validate_and_format_values(last_record)
         except ValueError as e:
             print(e)
             input("Press Enter to continue...")
             continue
-        insert_record(db_path, **kwargs)
-        print("\nExpense added!")
-        # save the values of the current record
-        save_last_values(STATE_FILE, kwargs)
+
+        insert_record(db_path, last_record)
+        print("\nRecord inserted!")
+
         while True:
-            add_more = input("\nAdd another expanse? [y/N] ").lower()
-            if add_more == 'y' or add_more == 'n':
+            choice = input("\nInsert another record? [y/N] ").lower()
+            if choice == 'y' or choice == 'n':
+                add_more = True if choice == 'y' else False
                 break
+
+    # save the last record after all are inserted
+    save_state_file(STATE_FILE, last_record)
 
 
 def main_update(db_path: str):

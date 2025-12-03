@@ -10,10 +10,10 @@ def create_table(db_name: str):
     con.commit()
     con.close()
 
-def insert_record(db_path: str, **kwargs):
+def insert_record(db_path: str, record: dict):
     con = sqlite3.connect(db_path)
     cur = con.cursor()
-    cmd, params = build_insert_stmt_params(**kwargs)
+    cmd, params = build_insert_stmt_params(record)
     cur.execute(cmd, params)
     con.commit()
     con.close()

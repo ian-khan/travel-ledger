@@ -1,19 +1,19 @@
 import json
 from pathlib import Path
 
-def load_last_values(file: Path):
-    """Load last entered values if available."""
-    if file.exists():
+def load_state_file(state_file: Path):
+    """Load last record from file, if available."""
+    if state_file.exists():
         try:
-            with open(file, "r", encoding="utf-8") as f:
+            with open(state_file, "r", encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError:
             return {}
     return {}
 
 
-def save_last_values(file: Path, data: dict):
-    """Save last entered values to disk."""
-    file.parent.mkdir(parents=True, exist_ok=True)
-    with open(file, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+def save_state_file(state_file: Path, record: dict):
+    """Save last record to file."""
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(state_file, "w", encoding="utf-8") as f:
+        json.dump(record, f, ensure_ascii=False, indent=2)
