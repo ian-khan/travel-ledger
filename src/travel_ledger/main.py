@@ -1,21 +1,19 @@
 import os.path as osp
 from copy import deepcopy
+from unittest import case
+
 from travel_ledger.config import COLUMNS, STATE_FILE
 from travel_ledger.state import load_last_values, save_last_values
 from travel_ledger.validator import validate_and_format_values
 from travel_ledger.transactions import init_db, insert_expense, fetch_expense_with_id, update_expense
 from travel_ledger.export import export_to_excel
 
-def main_init():
-    print("Initializing database...")
-    db_path = input("Enter the database path: ").strip()
+def main_create(db_path: str):
     init_db(db_path)
     print("Database initialized")
 
 
-def main_add():
-    print("Adding expenses...")
-    db_path = input("Enter the database path: ").strip()
+def main_insert(db_path: str):
     # The database to add record into must exist
     assert osp.isfile(db_path), f"File {db_path} does not exist, check for typo!"
     columns = deepcopy(COLUMNS)
@@ -59,9 +57,7 @@ def main_add():
                 break
 
 
-def main_edit():
-    print("Editing expenses...")
-    db_path = input("Enter the database path: ").strip()
+def main_update(db_path: str):
     # The database to add record into must exist
     assert osp.isfile(db_path), f"File {db_path} does not exist, check for typo!"
     columns = deepcopy(COLUMNS)
@@ -118,8 +114,7 @@ def main_edit():
                 break
 
 
-def main_export():
-    db_path = input("Enter the database path: ").strip()
+def main_export(db_path: str):
     assert osp.isfile(db_path), f"File {db_path} does not exist, check for typo!"
     out_path = input("Enter output Excel file path (press Enter to use default): ").strip() or None
     export_to_excel(db_path, out_path)
@@ -127,17 +122,35 @@ def main_export():
 
 def main():
     print("Travel Ledger")
-    print("1. Initialize database")
-    print("2. Add expenses")
-    print("3. List expenses")
-    print("4. Edit expenses")
-    print("5. Export expenses to Excel")
-    choice = input("Enter your choice: ").strip()
-    if choice == "1":
-        main_init()
-    elif choice == "2":
-        main_add()
-    elif choice == "4":
-        main_edit()
-    elif choice == "5":
-        main_export()
+    print("1. Create database")
+    print("2. Insert records")
+    print("3. Update records")
+    print("4. Delete records")
+    print("5. List records")
+    print("9. Export database")
+    choice = input("\nEnter your choice: ").strip()
+
+    task_main = None
+    match choice:
+        case "1":
+            print("Creating database...")
+            task_main = main_create
+        case "2":
+            print("Inserting records...")
+            task_main = main_insert
+        case "3":
+            print("Updating records...")
+            task_main = main_update
+        case "4":
+            print("Deleting records...")
+            pass
+        case "5":
+            pass
+        case "9":
+            task_main = main_export
+        case _:
+            print("Invalid choice!")
+            return
+
+    db_path = input("\nEnter the database path: ").strip()
+    task_main(db_path)
