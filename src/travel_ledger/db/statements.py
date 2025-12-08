@@ -23,14 +23,13 @@ def build_insert_stmt_params(record):
     col_names = ", ".join(cols)
     placeholders = ", ".join("?" for _ in cols)
 
-    insert_cmd = f"INSERT INTO expenses ({col_names}) VALUES ({placeholders})"
-    return insert_cmd, vals
+    stmt = f"INSERT INTO expenses ({col_names}) VALUES ({placeholders})"
+    return stmt, vals
 
-def build_update_stmt_params(**kwargs):
+def build_update_stmt_params(record_patch):
     cols = []
     vals = []
-    kwargs.pop('id', None)
-    for col, val in kwargs.items():
+    for col, val in record_patch.items():
         if col in COLUMNS:
             cols.append(col)
             vals.append(val)
@@ -41,5 +40,5 @@ def build_update_stmt_params(**kwargs):
     return update_cmd, vals
 
 def build_select_one_stmt():
-    select_one_cmd = f"SELECT * FROM expenses WHERE id=?"
-    return select_one_cmd
+    stmt = f"SELECT * FROM expenses WHERE id=?"
+    return stmt

@@ -68,58 +68,77 @@ def main_insert(db_path: str):
 
 def main_update(db_path: str):
     # The database to add record into must exist
-    assert osp.isfile(db_path), f"File {db_path} does not exist, check for typo!"
+    assert osp.isfile(db_path), f"Database {db_path} does not exist, check for typo!"
     columns = deepcopy(COLUMNS)
-    # the 'id' column should not be edited
+    # The 'id' field should not be set manually
     columns.pop("id", None)
-    print("\nTip: The value in [] is the current value.",
-          "\n     Press Enter to keep it; or '-' to explicitly clear it.")
-    edit_more = 'y'
-    while edit_more == 'y':
+
+    print("\nTip: Press Enter to reuse [values in the selected record]"
+          "\n     Press '-'   to clear the values")
+
+    # Recursively update multiple records
+    update_more = True
+    while update_more:
         try:
-            id_ = int(input("\nEnter the id of the expense to edit: ").strip())
+            id_ = int(input("\nEnter the ID of the record to update: ").strip())
         except ValueError:
-            print("Invalid ID: please enter a number.")
+            print("Entered ID is not a number!")
             continue
-        row = fetch_record_with_id(db_path, id_)
-        if row is None:
-            print(f"\nNo expense with id {id_}.")
+
+        # Fetch
+        record = fetch_record_with_id(db_path, id_)
+        if record is None:
+            print(f"\nThere is no record with id {id_}!")
             while True:
-                abort = input("Abort editing? [y/N] ").lower()
-                if abort == 'y':
-                    return
-                elif abort == 'n':
+                choice = input("Enter another ID? [y/N] ").lower()
+                if choice == 'y':
                     break
+                if choice == 'n':
+                    return
             continue
-        record = dict(zip(COLUMNS.keys(), row))
-        print("Current record:")
+        record = dict(zip(COLUMNS.keys(), record))
+
+        # Try updating the selected record until succeed
+        while True:
+            print(f"\nUpdating record id=={id_}")
+            # Fields to update for the selected
+            record_patch = {}
+            for col, (type_, desc) in columns.items():
+                prompt = f"  {desc} [{record[col]}]: "
+                new_val = input(prompt).strip()
+                if new_val == "":
+                    # Field value is unchanged; skip this field in the UPDATE SQL
+                    continue
+                elif new_val == "-":
+                    # Field value is set to empty string
+                    new_val = ""
+                record_patch.update({col: new_val})
+            # Verify and format the patch for the record
+            if not record_patch:
+                print(f"\nNo update to be made to the record!")
+            else:
+                try:
+                    validate_and_format_values(record_patch)
+                except ValueError as e:
+                    print(e)
+                    input("Press Enter to update again.")
+                    continue
+                update_record(db_path, id_, record_patch)
+                print("\nRecord edited!")
+            break
+
+        # Print the updated record
+        record = fetch_record_with_id(db_path, id_)
+        record = dict(zip(COLUMNS.keys(), record))
+        print("\nUpdated record:")
         for col, val in record.items():
             print(f"  {col}: {val}")
-        print("\nEditing record:")
-        kwargs = {}
-        for col, (type_, desc) in columns.items():
-            prompt = f"  {desc} [{record[col]}]: "
-            new_val = input(prompt).strip()
-            if new_val == "":
-                # column value is kept, skip it in the UPDATE SQL
-                continue
-            elif new_val == "-":
-                new_val = ""
-            kwargs.update({col: new_val})
-        if not kwargs:
-            print(f"\nNo changes made!")
-        else:
-            try:
-                kwargs = validate_and_format_values(**kwargs)
-            except ValueError as e:
-                print(e)
-                input("Press Enter to continue...")
-                continue
-            update_record(db_path, id_, **kwargs)
-            print("\nExpense edited!")
+
+        # Ask for updating another record
         while True:
-            edit_more = input("\nEdit another expense? [y/N] ").lower()
-            if edit_more == 'y' or edit_more == 'n':
+            choice = input("\nUpdate another record? [y/N] ").lower()
+            if choice == 'y' or choice == 'n':
+                update_more = True if choice == 'y' else False
                 break
 
 

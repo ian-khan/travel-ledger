@@ -18,10 +18,10 @@ def insert_record(db_path: str, record: dict):
     con.commit()
     con.close()
 
-def update_record(db_path: str, id_:int, **kwargs):
+def update_record(db_path: str, id_:int, record_patch):
     con = sqlite3.connect(db_path)
     cur = con.cursor()
-    cmd, params = build_update_stmt_params(**kwargs)
+    cmd, params = build_update_stmt_params(record_patch)
     params.append(id_)
     cur.execute(cmd, params)
     con.commit()
@@ -31,6 +31,6 @@ def fetch_record_with_id(db_path: str, id_:int):
     con = sqlite3.connect(db_path)
     cur = con.cursor()
     cur.execute(build_select_one_stmt(), (id_,))
-    row = cur.fetchone()
+    record = cur.fetchone()
     con.close()
-    return row
+    return record
