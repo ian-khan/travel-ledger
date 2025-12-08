@@ -39,8 +39,6 @@ def insert_record(db_path: str, record: dict):
 
 def update_record(db_path: str, id_:int, record_patch):
     stmt, params = build_update_stmt_params(id_, record_patch)
-    print(stmt)
-    print(params)
     execute(db_path, stmt, params)
 
 def fetch_record_with_id(db_path: str, id_:int):

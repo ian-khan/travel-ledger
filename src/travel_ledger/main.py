@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 from copy import deepcopy
 
@@ -13,14 +14,14 @@ def main_create(db_path: str):
 
 
 def main_insert(db_path: str):
-    assert osp.isfile(db_path), f"Database {db_path} does not exist!"
     columns = deepcopy(COLUMNS)
     # The 'id' field should not be set manually
     columns.pop("id", None)
 
-    # Load the last inserted record
+    # Load the last inserted record from the state dict
     # last_record should not contain the 'id' field
-    last_record = load_state_file(STATE_FILE)
+    state_dict = load_state_file(STATE_FILE)
+    last_record = state_dict.get("last_record", {})
 
     print("\nTip: Press Enter to reuse [values in the last record]"
           "\n     Press '-'   to clear the values")
@@ -63,12 +64,11 @@ def main_insert(db_path: str):
                 break
 
     # save the last record after all are inserted
-    save_state_file(STATE_FILE, last_record)
+    state_dict.update({"last_record": last_record})
+    save_state_file(STATE_FILE, state_dict)
 
 
 def main_update(db_path: str):
-    # The database to add record into must exist
-    assert osp.isfile(db_path), f"Database {db_path} does not exist, check for typo!"
     columns = deepcopy(COLUMNS)
     # The 'id' field should not be set manually
     columns.pop("id", None)
@@ -124,12 +124,12 @@ def main_update(db_path: str):
                     input("Press Enter to update again.")
                     continue
                 update_record(db_path, id_, record_patch)
-                print("\nRecord edited!")
+                print("\nRecord updated!")
             break
 
         # Print the updated record
-        record = fetch_record_with_id(db_path, id_)
-        record = dict(zip(COLUMNS.keys(), record))
+        updated_record = fetch_record_with_id(db_path, id_)
+        updated_record = dict(zip(COLUMNS.keys(), updated_record))
         print("\nUpdated record:")
         for col, val in record.items():
             print(f"  {col}: {val}")
@@ -141,12 +141,37 @@ def main_update(db_path: str):
                 update_more = True if choice == 'y' else False
                 break
 
+    if record != updated_record:
+        updated_record.pop("id")
+        state_dict = load_state_file(STATE_FILE)
+        state_dict.update({"last_record": updated_record})
+        save_state_file(STATE_FILE, state_dict)
+
 
 def main_export(db_path: str):
-    assert osp.isfile(db_path), f"File {db_path} does not exist, check for typo!"
-    out_path = input("Enter output Excel file path (press Enter to use default): ").strip() or None
+    out_path = input("Enter output file path or press Enter to use default: ").strip() or None
     export_to_excel(db_path, out_path)
 
+def get_and_save_db_path() -> str:
+    # Load the last database path from state file
+    state_dict = load_state_file(STATE_FILE)
+    last_path = state_dict.get("db_path", None)
+
+    # Ask user for database path
+    if last_path is None:
+        prompt = "\nEnter the database path: "
+    else:
+        prompt = (f"\nLast database path is: [{last_path}]"
+                  f"\nEnter the database path or press Enter to use last: ")
+    user_input = input(prompt).strip()
+    db_path = user_input if user_input else last_path
+    db_path = osp.abspath(osp.expanduser(db_path))
+
+    # Save database path if different from last time
+    if db_path != last_path:
+        state_dict.update({"db_path": db_path})
+        save_state_file(STATE_FILE, state_dict)
+    return db_path
 
 def main():
     print("Travel Ledger")
@@ -180,5 +205,13 @@ def main():
             print("Invalid choice!")
             return
 
-    db_path = input("\nEnter the database path: ").strip()
+    db_path = get_and_save_db_path()
+    db_parent = osp.dirname(db_path)
+
+    is_create_task = task_main is main_create
+    if is_create_task and not osp.isdir(db_parent):
+        raise FileNotFoundError(f"{db_parent} should be an existing directory!")
+    if not is_create_task and not osp.isfile(db_path):
+        raise FileNotFoundError(f"{db_path} should be an existing file!")
+
     task_main(db_path)

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-STATE_FILE = Path("last_record.json")
+STATE_FILE = Path("state_file.json")
 
 COLUMNS = {
     "id": ("INTEGER PRIMARY KEY AUTOINCREMENT",""),

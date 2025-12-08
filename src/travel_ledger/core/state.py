@@ -12,8 +12,8 @@ def load_state_file(state_file: Path):
     return {}
 
 
-def save_state_file(state_file: Path, record: dict):
+def save_state_file(state_file: Path, state_dict: dict):
     """Save last record to file."""
     state_file.parent.mkdir(parents=True, exist_ok=True)
     with open(state_file, "w", encoding="utf-8") as f:
-        json.dump(record, f, ensure_ascii=False, indent=2)
+        json.dump(state_dict, f, ensure_ascii=False, indent=2)
