@@ -40,6 +40,11 @@ def build_update_stmt_params(id_: int, record_patch: dict):
     vals.append(id_)
     return update_stmt, vals
 
+def build_delete_stmt_params(id_: int):
+    delete_stmt = "DELETE FROM expenses WHERE id=?"
+    params = (id_,)
+    return delete_stmt, params
+
 def build_select_one_stmt():
     stmt = f"SELECT * FROM expenses WHERE id=?"
     return stmt

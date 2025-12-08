@@ -5,7 +5,9 @@ from copy import deepcopy
 from travel_ledger.config import COLUMNS, STATE_FILE
 from travel_ledger.core.state import load_state_file, save_state_file
 from travel_ledger.core.validator import validate_and_format_values
-from travel_ledger.db.operations import create_table, insert_record, fetch_record_with_id, update_record
+from travel_ledger.db.operations import (create_table,
+                                         insert_record, update_record, delete_record,
+                                         fetch_record_with_id)
 from travel_ledger.db.export import export_to_excel
 
 def main_create(db_path: str):
@@ -57,8 +59,9 @@ def main_insert(db_path: str):
         insert_record(db_path, last_record)
         print("\nRecord inserted!")
 
+        # Ask whether to insert another record
         while True:
-            choice = input("\nInsert another record? [y/N] ").lower()
+            choice = input("\nInsert another record? [y/N]: ").lower()
             if choice == 'y' or choice == 'n':
                 add_more = True if choice == 'y' else False
                 break
@@ -85,12 +88,12 @@ def main_update(db_path: str):
             print("Entered ID is not a number!")
             continue
 
-        # Fetch
+        # Fetch the record to update
         record = fetch_record_with_id(db_path, id_)
         if record is None:
             print(f"\nThere is no record with id {id_}!")
             while True:
-                choice = input("Enter another ID? [y/N] ").lower()
+                choice = input("Enter another ID? [y/N]: ").lower()
                 if choice == 'y':
                     break
                 if choice == 'n':
@@ -131,12 +134,12 @@ def main_update(db_path: str):
         updated_record = fetch_record_with_id(db_path, id_)
         updated_record = dict(zip(COLUMNS.keys(), updated_record))
         print("\nUpdated record:")
-        for col, val in record.items():
+        for col, val in updated_record.items():
             print(f"  {col}: {val}")
 
-        # Ask for updating another record
+        # Ask whether to another record
         while True:
-            choice = input("\nUpdate another record? [y/N] ").lower()
+            choice = input("\nUpdate another record? [y/N]: ").lower()
             if choice == 'y' or choice == 'n':
                 update_more = True if choice == 'y' else False
                 break
@@ -147,6 +150,51 @@ def main_update(db_path: str):
         state_dict.update({"last_record": updated_record})
         save_state_file(STATE_FILE, state_dict)
 
+def main_delete(db_path: str):
+    # Recursively delete multiple records
+    delete_more = True
+    while delete_more:
+        try:
+            id_ = int(input("\nEnter the ID of the record to delete: ").strip())
+        except ValueError:
+            print("Entered ID is not a number!")
+            continue
+
+        # Fetch the record to delete
+        record = fetch_record_with_id(db_path, id_)
+        if record is None:
+            print(f"\nThere is no record with id {id_}!")
+            while True:
+                choice = input("\nEnter another ID? [y/N]: ").lower()
+                if choice == 'y':
+                    break
+                if choice == 'n':
+                    return
+            continue
+
+        # Print the record to delete
+        record = dict(zip(COLUMNS.keys(), record))
+        print("\nRecord to delete:")
+        for col, val in record.items():
+            print(f"  {col}: {val}")
+
+        # Ask for final confirmation
+        while True:
+            choice = input("\nAre you sure to delete this record? [y/N]: ").lower()
+            if choice == 'y':
+                delete_record(db_path, id_)
+                print("\nDeletion complete!")
+                break
+            if choice == 'n':
+                print("\nDeletion cancelled!")
+                break
+
+        # Ask whether to delete another record
+        while True:
+            choice = input("\nDelete another record? [y/N]: ").lower()
+            if choice == 'y' or choice == 'n':
+                delete_more = True if choice == 'y' else False
+                break
 
 def main_export(db_path: str):
     out_path = input("Enter output file path or press Enter to use default: ").strip() or None
@@ -196,7 +244,7 @@ def main():
             task_main = main_update
         case "4":
             print("Deleting records...")
-            pass
+            task_main = main_delete
         case "5":
             pass
         case "9":

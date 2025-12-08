@@ -1,6 +1,9 @@
 import sqlite3
-from travel_ledger.db.statements import (build_create_table_stmt, build_insert_stmt_params,
-                                         build_update_stmt_params, build_select_one_stmt)
+from travel_ledger.db.statements import (build_create_table_stmt,
+                                         build_insert_stmt_params,
+                                         build_update_stmt_params,
+                                         build_delete_stmt_params,
+                                         build_select_one_stmt)
 from contextlib import closing
 from typing import Any, Optional, Sequence
 
@@ -39,6 +42,10 @@ def insert_record(db_path: str, record: dict):
 
 def update_record(db_path: str, id_:int, record_patch):
     stmt, params = build_update_stmt_params(id_, record_patch)
+    execute(db_path, stmt, params)
+
+def delete_record(db_path: str, id_:int):
+    stmt, params = build_delete_stmt_params(id_)
     execute(db_path, stmt, params)
 
 def fetch_record_with_id(db_path: str, id_:int):
