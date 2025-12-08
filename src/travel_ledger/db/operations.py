@@ -34,26 +34,16 @@ def create_table(db_path: str):
     execute(db_path, stmt)
 
 def insert_record(db_path: str, record: dict):
-    con = sqlite3.connect(db_path)
-    cur = con.cursor()
-    cmd, params = build_insert_stmt_params(record)
-    cur.execute(cmd, params)
-    con.commit()
-    con.close()
+    stmt, params = build_insert_stmt_params(record)
+    execute(db_path, stmt, params)
 
 def update_record(db_path: str, id_:int, record_patch):
-    con = sqlite3.connect(db_path)
-    cur = con.cursor()
-    cmd, params = build_update_stmt_params(record_patch)
-    params.append(id_)
-    cur.execute(cmd, params)
-    con.commit()
-    con.close()
+    stmt, params = build_update_stmt_params(id_, record_patch)
+    print(stmt)
+    print(params)
+    execute(db_path, stmt, params)
 
 def fetch_record_with_id(db_path: str, id_:int):
-    con = sqlite3.connect(db_path)
-    cur = con.cursor()
-    cur.execute(build_select_one_stmt(), (id_,))
-    record = cur.fetchone()
-    con.close()
+    stmt = build_select_one_stmt()
+    record = execute(db_path, stmt, params=(id_,), fetch='one')
     return record

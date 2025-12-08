@@ -101,7 +101,7 @@ def main_update(db_path: str):
         # Try updating the selected record until succeed
         while True:
             print(f"\nUpdating record id=={id_}")
-            # Fields to update for the selected
+            # Fields to update for the selected record
             record_patch = {}
             for col, (type_, desc) in columns.items():
                 prompt = f"  {desc} [{record[col]}]: "

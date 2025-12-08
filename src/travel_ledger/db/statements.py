@@ -26,7 +26,7 @@ def build_insert_stmt_params(record):
     stmt = f"INSERT INTO expenses ({col_names}) VALUES ({placeholders})"
     return stmt, vals
 
-def build_update_stmt_params(record_patch):
+def build_update_stmt_params(id_: int, record_patch: dict):
     cols = []
     vals = []
     for col, val in record_patch.items():
@@ -35,9 +35,10 @@ def build_update_stmt_params(record_patch):
             vals.append(val)
 
     set_clause = ", ".join(f"{col}=?" for col in cols)
+    update_stmt = f"UPDATE expenses SET {set_clause} WHERE id=?"
 
-    update_cmd = f"UPDATE expenses SET {set_clause} WHERE id=?"
-    return update_cmd, vals
+    vals.append(id_)
+    return update_stmt, vals
 
 def build_select_one_stmt():
     stmt = f"SELECT * FROM expenses WHERE id=?"
