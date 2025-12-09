@@ -145,7 +145,7 @@ def main_update(db_path: str):
                 break
 
     if record != updated_record:
-        updated_record.pop("id")
+        updated_record.pop("ID")
         state_dict = load_state_file(STATE_FILE)
         state_dict.update({"last_record": updated_record})
         save_state_file(STATE_FILE, state_dict)
@@ -198,8 +198,12 @@ def main_delete(db_path: str):
                 delete_more = True if choice == 'y' else False
                 break
 
+def main_print(db_path: str):
+    pass
+
 def main_export(db_path: str):
-    out_path = input("Enter output file path or press Enter to use default: ").strip() or None
+    out_path = input("Enter output file path or press Enter "
+                     "to save beside database: ").strip() or None
     export_to_excel(db_path, out_path)
 
 def get_and_save_db_path() -> str:
@@ -224,12 +228,15 @@ def get_and_save_db_path() -> str:
     return db_path
 
 def main():
-    print("Travel Ledger")
+    print("\nWelcome to use the Travel Ledger!")
+    db_path = get_and_save_db_path()
+
+    print()
     print("1. Create database")
     print("2. Insert records")
     print("3. Update records")
     print("4. Delete records")
-    print("5. List records")
+    print("5. Print  records")
     print("9. Export database")
     choice = input("\nEnter your choice: ").strip()
 
@@ -248,14 +255,14 @@ def main():
             print("Deleting records...")
             task_main = main_delete
         case "5":
-            pass
+            print("Printing records...")
+            task_main = main_print
         case "9":
             task_main = main_export
         case _:
             print("Invalid choice!")
             return
 
-    db_path = get_and_save_db_path()
     db_parent = osp.dirname(db_path)
 
     is_create_task = task_main is main_create
