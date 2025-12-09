@@ -19,16 +19,16 @@ class Column:
         return prompt
 
 COLUMNS: list[Column] = [
-    Column("ID", "INTEGER PRIMARY KEY AUTOINCREMENT", "Should not set manually", 4),
+    Column("ID", "INTEGER PRIMARY KEY AUTOINCREMENT", "Should not set manually", 3),
     Column("Date", "TEXT NOT NULL", "YYYY-MM-DD or YYMMDD", 10),
     Column("Time", "TEXT", "HH:mm or HHmm", 5),
-    Column("City", "TEXT", "", 10),
+    Column("City", "TEXT", "", 5),
     Column("Place", "TEXT", "", 15),
     Column("Amount", "REAL NOT NULL", "JPY", 8),
-    Column("Payer", "TEXT", "", 6, choices=("Ian", "Momo")),
+    Column("Payer", "TEXT", "", 5, choices=("Ian", "Momo")),
     Column("Method", "TEXT", "", 6, choices=("Cash", "Card", "Wechat", "Alipay")),
-    Column("Category", "TEXT", "", 10,
+    Column("Category", "TEXT", "", 9,
            choices=("Hotel", "Transport", "Meal", "Shopping", "Donation", "Admission")),
     Column("Description", "TEXT", "", 20),
-    Column("Note", "TEXT", "", 20),
+    Column("Note", "TEXT", "", 15),
 ]

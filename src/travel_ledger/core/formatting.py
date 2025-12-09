@@ -46,3 +46,18 @@ def validate_and_format_values(record: dict):
                 datetime.strptime(val, "%H:%M")
             except ValueError:
                 raise ValueError("\nInvalid time format! Use HH:mm or HHmm (e.g., 1430).")
+
+def get_header_footer() -> tuple[str, str]:
+    flat = "+-" + "-+-".join(["-" * col.print_width for col in COLUMNS]) + "-+"
+    header = "| " + " | ".join([col.name.ljust(col.print_width) for col in COLUMNS]) + " |"
+    return flat + '\n' + header + '\n' + flat, flat
+
+def get_formatted_rows(record: list[tuple]) -> str:
+    flat = "\n+-" + "-+-".join(["-" * col.print_width for col in COLUMNS]) + "-+\n"
+    formatted_rows = []
+    for row in record:
+        formatted_row = "| " + " | ".join([f"{str(val)[0: COLUMNS[i].print_width].ljust(COLUMNS[i].print_width)}"
+                                        for i, val in enumerate(row)]) + " |"
+        formatted_rows.append(formatted_row)
+    return flat.join(formatted_rows)
+
