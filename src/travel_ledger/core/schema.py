@@ -6,10 +6,17 @@ from typing import Optional
 class Column:
     name: str
     sql_type: str
-    prompt: str
+    hint: str
     print_width: int
     print_align: str = "right",
     choices: Optional[tuple[str, ...]] = None
+
+    @property
+    def prompt(self):
+        prompt = f"{self.name}"
+        if self.hint != "":
+            prompt = f"{prompt} ({self.hint})"
+        return prompt
 
 COLUMNS: list[Column] = [
     Column("ID", "INTEGER PRIMARY KEY AUTOINCREMENT", "Should not set manually", 4),

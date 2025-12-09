@@ -1,7 +1,7 @@
-from travel_ledger.config import COLUMNS
+from travel_ledger.core.schema import COLUMNS
 
 def build_create_table_stmt():
-    columns = ",\n    ".join(f"{col} {type_}" for col, (type_, desc) in COLUMNS.items())
+    columns = ",\n    ".join(f"{col.name} {col.sql_type}" for col in COLUMNS)
     create_table_cmd = f"CREATE TABLE IF NOT EXISTS expenses (\n    {columns}\n)"
     return create_table_cmd
 
@@ -13,32 +13,34 @@ def build_insert_stmt_params(record):
     :param record:
     :return:
     """
-    cols = []
-    vals = []
+    col_names = [col.name for col in COLUMNS]
+    insert_cols = []
+    insert_vals = []
     for col, val in record.items():
-        if col in COLUMNS:
-            cols.append(col)
-            vals.append(val)
+        if col in col_names:
+            insert_cols.append(col)
+            insert_vals.append(val)
 
-    col_names = ", ".join(cols)
-    placeholders = ", ".join("?" for _ in cols)
+    cols = ", ".join(insert_cols)
+    placeholders = ", ".join("?" for _ in insert_cols)
 
-    stmt = f"INSERT INTO expenses ({col_names}) VALUES ({placeholders})"
-    return stmt, vals
+    stmt = f"INSERT INTO expenses ({cols}) VALUES ({placeholders})"
+    return stmt, insert_vals
 
 def build_update_stmt_params(id_: int, record_patch: dict):
-    cols = []
-    vals = []
+    col_names = [col.name for col in COLUMNS]
+    update_cols = []
+    update_vals = []
     for col, val in record_patch.items():
-        if col in COLUMNS:
-            cols.append(col)
-            vals.append(val)
+        if col in col_names:
+            update_cols.append(col)
+            update_vals.append(val)
 
-    set_clause = ", ".join(f"{col}=?" for col in cols)
+    set_clause = ", ".join(f"{col}=?" for col in update_cols)
     update_stmt = f"UPDATE expenses SET {set_clause} WHERE id=?"
 
-    vals.append(id_)
-    return update_stmt, vals
+    update_vals.append(id_)
+    return update_stmt, update_vals
 
 def build_delete_stmt_params(id_: int):
     delete_stmt = "DELETE FROM expenses WHERE id=?"

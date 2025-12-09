@@ -2,7 +2,8 @@ import os
 import os.path as osp
 from copy import deepcopy
 
-from travel_ledger.config import COLUMNS, STATE_FILE
+from travel_ledger.config import STATE_FILE
+from travel_ledger.core.schema import COLUMNS
 from travel_ledger.core.state import load_state_file, save_state_file
 from travel_ledger.core.formatting import validate_and_format_values
 from travel_ledger.db.operations import (create_table,
@@ -16,9 +17,8 @@ def main_create(db_path: str):
 
 
 def main_insert(db_path: str):
-    columns = deepcopy(COLUMNS)
-    # The 'id' field should not be set manually
-    columns.pop("id", None)
+    # The 'ID' field should not be set manually
+    columns = deepcopy(COLUMNS)[1:]
 
     # Load the last inserted record from the state dict
     # last_record should not contain the 'id' field
@@ -32,12 +32,12 @@ def main_insert(db_path: str):
     add_more = True
     while add_more:
         print()
-        for col, (type_, desc) in columns.items():
+        for col in columns:
             # create prompt with optional default value
-            prompt = f"  {desc}"
-            last_val = last_record.get(col, None)
+            prompt = f">> {col.prompt}"
+            last_val = last_record.get(col.name, None)
             if last_val is not None:
-                prompt += f"[{last_val}]"
+                prompt += f" [{last_val}]"
             prompt += ": "
 
             val = input(prompt).strip()
@@ -47,7 +47,7 @@ def main_insert(db_path: str):
             elif val == "-":
                 # explicitly clear the value
                 val = ""
-            last_record.update({col: val})
+            last_record.update({col.name: val})
 
         try:
             validate_and_format_values(last_record)
@@ -72,9 +72,9 @@ def main_insert(db_path: str):
 
 
 def main_update(db_path: str):
-    columns = deepcopy(COLUMNS)
-    # The 'id' field should not be set manually
-    columns.pop("id", None)
+    # The 'ID' field should not be set manually
+    columns = deepcopy(COLUMNS)[1:]
+    col_names = [col.name for col in COLUMNS]
 
     print("\nTip: Press Enter to reuse [values in the selected record]"
           "\n     Press '-'   to clear the values")
@@ -99,15 +99,15 @@ def main_update(db_path: str):
                 if choice == 'n':
                     return
             continue
-        record = dict(zip(COLUMNS.keys(), record))
+        record = dict(zip(col_names, record))
 
         # Try updating the selected record until succeed
         while True:
             print(f"\nUpdating record id=={id_}")
             # Fields to update for the selected record
             record_patch = {}
-            for col, (type_, desc) in columns.items():
-                prompt = f"  {desc} [{record[col]}]: "
+            for col in columns:
+                prompt = f">> {col.name} [{record[col.name]}]: "
                 new_val = input(prompt).strip()
                 if new_val == "":
                     # Field value is unchanged; skip this field in the UPDATE SQL
@@ -115,7 +115,7 @@ def main_update(db_path: str):
                 elif new_val == "-":
                     # Field value is set to empty string
                     new_val = ""
-                record_patch.update({col: new_val})
+                record_patch.update({col.name: new_val})
             # Verify and format the patch for the record
             if not record_patch:
                 print(f"\nNo update to be made to the record!")
@@ -132,10 +132,10 @@ def main_update(db_path: str):
 
         # Print the updated record
         updated_record = fetch_record_with_id(db_path, id_)
-        updated_record = dict(zip(COLUMNS.keys(), updated_record))
+        updated_record = dict(zip(col_names, updated_record))
         print("\nUpdated record:")
         for col, val in updated_record.items():
-            print(f"  {col}: {val}")
+            print(f"<> {col}: {val}")
 
         # Ask whether to another record
         while True:
@@ -151,6 +151,8 @@ def main_update(db_path: str):
         save_state_file(STATE_FILE, state_dict)
 
 def main_delete(db_path: str):
+    col_names = [col.name for col in COLUMNS]
+
     # Recursively delete multiple records
     delete_more = True
     while delete_more:
@@ -173,7 +175,7 @@ def main_delete(db_path: str):
             continue
 
         # Print the record to delete
-        record = dict(zip(COLUMNS.keys(), record))
+        record = dict(zip(col_names, record))
         print("\nRecord to delete:")
         for col, val in record.items():
             print(f"  {col}: {val}")
