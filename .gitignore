@@ -2,6 +2,7 @@
 /*.db
 /*.json
 /*.xlsx
+/test/
 
 ########## Python gitignore ##########
 # Byte-compiled / optimized / DLL files

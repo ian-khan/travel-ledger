@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from travel_ledger.config import COLUMNS, STATE_FILE
 from travel_ledger.core.state import load_state_file, save_state_file
-from travel_ledger.core.validator import validate_and_format_values
+from travel_ledger.core.formatting import validate_and_format_values
 from travel_ledger.db.operations import (create_table,
                                          insert_record, update_record, delete_record,
                                          fetch_record_with_id)
