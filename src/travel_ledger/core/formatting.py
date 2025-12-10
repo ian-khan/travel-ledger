@@ -48,16 +48,31 @@ def validate_and_format_values(record: dict):
                 raise ValueError("\nInvalid time format! Use HH:mm or HHmm (e.g., 1430).")
 
 def get_header_footer() -> tuple[str, str]:
-    flat = "+-" + "-+-".join(["-" * col.print_width for col in COLUMNS]) + "-+"
+    hor_line = "+-" + "-+-".join(["-" * col.print_width for col in COLUMNS]) + "-+"
     header = "| " + " | ".join([col.name.ljust(col.print_width) for col in COLUMNS]) + " |"
-    return flat + '\n' + header + '\n' + flat, flat
+    return hor_line + '\n' + header + '\n' + hor_line, hor_line
 
 def get_formatted_rows(record: list[tuple]) -> str:
-    flat = "\n+-" + "-+-".join(["-" * col.print_width for col in COLUMNS]) + "-+\n"
-    formatted_rows = []
+    hor_line = "\n+-" + "-+-".join(["-" * col.print_width for col in COLUMNS]) + "-+\n"
+
+    fmt_rows = []
     for row in record:
-        formatted_row = "| " + " | ".join([f"{str(val)[0: COLUMNS[i].print_width].ljust(COLUMNS[i].print_width)}"
-                                        for i, val in enumerate(row)]) + " |"
-        formatted_rows.append(formatted_row)
-    return flat.join(formatted_rows)
+        fmt_vals = []
+        for val, col in zip(row, COLUMNS):
+            # Convert numbers to str and trim to fit print width
+            val = str(val)[:col.print_width]
+            match col.print_align:
+                case "left":
+                    fmt_val = val.ljust(col.print_width)
+                case "center":
+                    fmt_val = val.center(col.print_width)
+                case "right":
+                    fmt_val = val.rjust(col.print_width)
+                case _:
+                    raise ValueError("\nInvalid column alignment format!")
+            fmt_vals.append(fmt_val)
+        fmt_row = "| " + " | ".join(fmt_vals) + " |"
+        fmt_rows.append(fmt_row)
+
+    return hor_line.join(fmt_rows)
 

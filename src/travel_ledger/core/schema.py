@@ -8,7 +8,7 @@ class Column:
     sql_type: str
     hint: str
     print_width: int
-    print_align: str = "right",
+    print_align: str = "left"
     choices: Optional[tuple[str, ...]] = None
 
     @property
