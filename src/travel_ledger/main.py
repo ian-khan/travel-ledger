@@ -244,28 +244,28 @@ def main():
     db_path = get_and_save_db_path()
 
     print("\nWhat would you like to do?")
-    print("1. Create database")
-    print("2. Insert records")
-    print("3. Update records")
-    print("4. Delete records")
-    print("5. Print  records")
+    print("0. Create database")
+    print("1. Insert records")
+    print("2. Update records")
+    print("3. Delete records")
+    print("4. Print  records")
     print("9. Export database")
     choice = input("\nEnter your choice: ").strip()
 
     match choice:
-        case "1":
+        case "0":
             print("Creating database...")
             task_main = main_create
-        case "2":
+        case "1":
             print("Inserting records...")
             task_main = main_insert
-        case "3":
+        case "2":
             print("Updating records...")
             task_main = main_update
-        case "4":
+        case "3":
             print("Deleting records...")
             task_main = main_delete
-        case "5":
+        case "4":
             print("Printing records...")
             task_main = main_print
         case "9":
