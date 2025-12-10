@@ -50,3 +50,7 @@ def build_delete_stmt_params(id_: int):
 def build_select_one_stmt():
     stmt = f"SELECT * FROM expenses WHERE id=?"
     return stmt
+
+def build_select_all_stmt():
+    stmt = "SELECT * FROM expenses ORDER BY date ASC, time ASC, id ASC"
+    return stmt

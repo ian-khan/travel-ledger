@@ -3,7 +3,8 @@ from travel_ledger.db.statements import (build_create_table_stmt,
                                          build_insert_stmt_params,
                                          build_update_stmt_params,
                                          build_delete_stmt_params,
-                                         build_select_one_stmt)
+                                         build_select_one_stmt,
+                                         build_select_all_stmt)
 from contextlib import closing
 from typing import Any, Optional, Sequence
 
@@ -12,7 +13,8 @@ def execute(db_path: str,
             params: Sequence[Any]=(),
             fetch: Optional[str]=None):
     """
-    Open connection, execute a statement with optional parameters, and return the fetched result.
+    Open connection, execute a statement with optional parameters,
+    and return the optional fetched result.
     :param db_path: path to database
     :param stmt: SQL statement to execute
     :param params: parameters to pass to statement
@@ -48,7 +50,12 @@ def delete_record(db_path: str, id_:int):
     stmt, params = build_delete_stmt_params(id_)
     execute(db_path, stmt, params)
 
-def fetch_record_with_id(db_path: str, id_:int):
+def fetch_one_record(db_path: str, id_:int) -> Optional[tuple]:
     stmt = build_select_one_stmt()
     record = execute(db_path, stmt, params=(id_,), fetch='one')
     return record
+
+def fetch_all_records(db_path: str) -> Optional[list[tuple]]:
+    stmt = build_select_all_stmt()
+    records = execute(db_path, stmt, fetch='all')
+    return records

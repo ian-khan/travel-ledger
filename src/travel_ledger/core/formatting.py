@@ -34,7 +34,7 @@ def validate_and_format_values(record: dict):
             try:
                 datetime.strptime(val, "%Y-%m-%d")
             except ValueError:
-                raise ValueError("\nInvalid date format! Use YYYY-MM-DD or YYMMDD (e.g., 251005).")
+                raise ValueError("\nInvalid date format! Use YYYY-mm-dd or YYmmdd (e.g., 251005).")
     if 'Time' in record and record['Time']:
         val = record['Time']
         # If user entered 4 digits like 1430
@@ -45,7 +45,7 @@ def validate_and_format_values(record: dict):
             try:
                 datetime.strptime(val, "%H:%M")
             except ValueError:
-                raise ValueError("\nInvalid time format! Use HH:mm or HHmm (e.g., 1430).")
+                raise ValueError("\nInvalid time format! Use HH:MM or HHMM (e.g., 1430).")
 
 def get_header_footer() -> tuple[str, str]:
     hor_line = "+-" + "-+-".join(["-" * col.print_width for col in COLUMNS]) + "-+"

@@ -5,15 +5,17 @@ from copy import deepcopy
 from travel_ledger.config import STATE_FILE
 from travel_ledger.core.schema import COLUMNS
 from travel_ledger.core.state import load_state_file, save_state_file
-from travel_ledger.core.formatting import validate_and_format_values
+from travel_ledger.core.formatting import (validate_and_format_values,
+                                           get_header_footer,
+                                           get_formatted_rows)
 from travel_ledger.db.operations import (create_table,
                                          insert_record, update_record, delete_record,
-                                         fetch_record_with_id)
+                                         fetch_one_record, fetch_all_records)
 from travel_ledger.db.export import export_to_excel
 
 def main_create(db_path: str):
     create_table(db_path)
-    print("Database initialized")
+    print("Database created!")
 
 
 def main_insert(db_path: str):
@@ -89,7 +91,7 @@ def main_update(db_path: str):
             continue
 
         # Fetch the record to update
-        record = fetch_record_with_id(db_path, id_)
+        record = fetch_one_record(db_path, id_)
         if record is None:
             print(f"\nThere is no record with id {id_}!")
             while True:
@@ -131,7 +133,7 @@ def main_update(db_path: str):
             break
 
         # Print the updated record
-        updated_record = fetch_record_with_id(db_path, id_)
+        updated_record = fetch_one_record(db_path, id_)
         updated_record = dict(zip(col_names, updated_record))
         print("\nUpdated record:")
         for col, val in updated_record.items():
@@ -163,7 +165,7 @@ def main_delete(db_path: str):
             continue
 
         # Fetch the record to delete
-        record = fetch_record_with_id(db_path, id_)
+        record = fetch_one_record(db_path, id_)
         if record is None:
             print(f"\nThere is no record with id {id_}!")
             while True:
@@ -178,7 +180,7 @@ def main_delete(db_path: str):
         record = dict(zip(col_names, record))
         print("\nRecord to delete:")
         for col, val in record.items():
-            print(f"  {col}: {val}")
+            print(f"xx {col}: {val}")
 
         # Ask for final confirmation
         while True:
@@ -199,7 +201,17 @@ def main_delete(db_path: str):
                 break
 
 def main_print(db_path: str):
-    pass
+    records = fetch_all_records(db_path)
+    if records is None:
+        print("\nNo records in the database!")
+        return
+
+    header, footer = get_header_footer()
+    fmt_rows = get_formatted_rows(records)
+    print(header)
+    print(fmt_rows)
+    print(footer)
+    return
 
 def main_export(db_path: str):
     out_path = input("Enter output file path or press Enter "
@@ -231,7 +243,7 @@ def main():
     print("\nWelcome to use the Travel Ledger!")
     db_path = get_and_save_db_path()
 
-    print()
+    print("\nWhat would you like to do?")
     print("1. Create database")
     print("2. Insert records")
     print("3. Update records")
@@ -240,7 +252,6 @@ def main():
     print("9. Export database")
     choice = input("\nEnter your choice: ").strip()
 
-    task_main = None
     match choice:
         case "1":
             print("Creating database...")
@@ -263,8 +274,8 @@ def main():
             print("Invalid choice!")
             return
 
+    # Validate the database path
     db_parent = osp.dirname(db_path)
-
     is_create_task = task_main is main_create
     if is_create_task and not osp.isdir(db_parent):
         raise FileNotFoundError(f"{db_parent} should be an existing directory!")

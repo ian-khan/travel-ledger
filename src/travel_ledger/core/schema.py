@@ -20,8 +20,8 @@ class Column:
 
 COLUMNS: list[Column] = [
     Column("ID", "INTEGER PRIMARY KEY AUTOINCREMENT", "Should not set manually", 3),
-    Column("Date", "TEXT NOT NULL", "YYYY-MM-DD or YYMMDD", 10),
-    Column("Time", "TEXT", "HH:mm or HHmm", 5),
+    Column("Date", "TEXT NOT NULL", "YYYY-mm-dd or YYmmdd", 10),
+    Column("Time", "TEXT", "HH:MM or HHMM", 5),
     Column("City", "TEXT", "", 5),
     Column("Place", "TEXT", "", 15),
     Column("Amount", "REAL NOT NULL", "JPY", 8),
