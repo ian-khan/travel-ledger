@@ -15,8 +15,7 @@ from travel_ledger.db.export import export_to_excel
 
 def main_create(db_path: str):
     create_table(db_path)
-    print("Database created!")
-
+    print("\nDatabase created!")
 
 def main_insert(db_path: str):
     # The 'ID' field should not be set manually
@@ -35,20 +34,8 @@ def main_insert(db_path: str):
     while add_more:
         print()
         for col in columns:
-            # create prompt with optional default value
-            prompt = f">> {col.prompt}"
             last_val = last_record.get(col.name, None)
-            if last_val is not None:
-                prompt += f" [{last_val}]"
-            prompt += ": "
-
-            val = input(prompt).strip()
-            if val == "":
-                # reuse the last value, or empty string if it does not exist
-                val = last_val if last_val is not None else ""
-            elif val == "-":
-                # explicitly clear the value
-                val = ""
+            val = col.prompt_and_get_value(last_val)
             last_record.update({col.name: val})
 
         try:

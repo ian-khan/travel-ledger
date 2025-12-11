@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Optional, Any, Sequence, Literal
 from wcwidth import wcswidth
 
 
@@ -11,6 +11,7 @@ class Column:
     width: int
     align: str = "left"
     choices: Optional[tuple[str, ...]] = None
+    is_counted_items: bool = False
 
     @property
     def prompt(self):
@@ -53,17 +54,71 @@ class Column:
     def format_value(self, value) -> str:
         return self.format(value)
 
+    def format_counted_items(self, items: Sequence[str], counts: Sequence[int]) -> str:
+        if not self.is_counted_items:
+            raise ValueError("This column is not counted items!")
+        counted_items = [f"{item} x{count}" for item, count in zip(items, counts)]
+        counted_items = ", ".join(counted_items)
+        return counted_items
+
+    def prompt_and_get_value(self, default_value: Optional[str]=None) -> str:
+        """
+        Prompt user to enter value for this column.
+        :param default_value: Default value to return if no value is entered.
+        :return: Value for this column.
+        """
+        default_value = "" if default_value is None else default_value
+        hint_prompt = "" if self.hint == "" else f" ({self.hint})"
+        value_prompt = "" if default_value == "" else f" [{default_value}]"
+        prompt = f">> {self.name}{hint_prompt}{value_prompt}: "
+
+        if not self.is_counted_items:
+            value = input(prompt).strip()
+            if value == "":
+                value = default_value  # Use the default value or empty string
+            elif value == "-":
+                value = ""  # Explicitly clear the value
+        else:
+            print(prompt)
+
+            use_default, items, counts, i = False, [], [], 1
+            while True:
+                item = input(f">>>> Item  {i}: ").strip()
+                if item == "":  # Use the default value or empty string
+                    if i != 1:
+                        raise ValueError("To use the default value, press Enter when prompted to "
+                                         "enter the first item. To stop adding items, press '-'.")
+                    use_default = True
+                    break
+                if item == "-":
+                    break  # Stop adding item
+                while True:
+                    count = input(f">>>> Count {i}: ").strip()
+                    if count == "":
+                        print("Count should not be empty!")
+                        continue
+                    try:
+                        count = int(count)
+                        break
+                    except ValueError:
+                        print("Count should be an integer!")
+                items.append(item)
+                counts.append(count)
+                i = i + 1
+            value = default_value if use_default else self.format_counted_items(items, counts)
+        return value
+
 COLUMNS: list[Column] = [
-    Column("ID", "INTEGER PRIMARY KEY AUTOINCREMENT", "Should not set manually", 3),
+    Column("ID", "INTEGER PRIMARY KEY AUTOINCREMENT", "Should not set manually", 2),
     Column("Date", "TEXT NOT NULL", "YYYY-mm-dd or YYmmdd", 10),
     Column("Time", "TEXT", "HH:MM or HHMM", 5),
     Column("City", "TEXT", "", 5),
-    Column("Place", "TEXT", "", 30),
-    Column("Amount", "REAL NOT NULL", "JPY", 8),
+    Column("Place", "TEXT", "", 24),
+    Column("Amount", "REAL NOT NULL", "JPY", 7),
     Column("Payer", "TEXT", "", 5, choices=("Ian", "Momo")),
     Column("Method", "TEXT", "", 6, choices=("Cash", "Card", "Wechat", "Alipay")),
     Column("Category", "TEXT", "", 9,
            choices=("Hotel", "Transport", "Meal", "Shopping", "Donation", "Admission")),
-    Column("Description", "TEXT", "", 20),
-    Column("Note", "TEXT", "", 10),
+    Column("Items", "TEXT", "", 36, is_counted_items=True),
+    Column("Note", "TEXT", "", 4),
 ]
