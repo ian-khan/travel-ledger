@@ -6,8 +6,8 @@ from travel_ledger.config import STATE_FILE
 from travel_ledger.core.schema import COLUMNS
 from travel_ledger.core.state import load_state_file, save_state_file
 from travel_ledger.core.formatting import (validate_and_format_values,
-                                           get_header_footer,
-                                           get_formatted_rows)
+                                           format_header_footer,
+                                           format_records)
 from travel_ledger.db.operations import (create_table,
                                          insert_record, update_record, delete_record,
                                          fetch_one_record, fetch_all_records)
@@ -61,17 +61,16 @@ def main_insert(db_path: str):
         insert_record(db_path, last_record)
         print("\nRecord inserted!")
 
+        # Save the last record everytime a record is inserted
+        state_dict.update({"last_record": last_record})
+        save_state_file(STATE_FILE, state_dict)
+
         # Ask whether to insert another record
         while True:
             choice = input("\nInsert another record? [y/N]: ").lower()
             if choice == 'y' or choice == 'n':
                 add_more = True if choice == 'y' else False
                 break
-
-    # save the last record after all are inserted
-    state_dict.update({"last_record": last_record})
-    save_state_file(STATE_FILE, state_dict)
-
 
 def main_update(db_path: str):
     # The 'ID' field should not be set manually
@@ -206,10 +205,10 @@ def main_print(db_path: str):
         print("\nNo records in the database!")
         return
 
-    header, footer = get_header_footer()
-    fmt_rows = get_formatted_rows(records)
+    header, footer = format_header_footer()
+    records = format_records(records)
     print(header)
-    print(fmt_rows)
+    print(records)
     print(footer)
     return
 

@@ -47,32 +47,19 @@ def validate_and_format_values(record: dict):
             except ValueError:
                 raise ValueError("\nInvalid time format! Use HH:MM or HHMM (e.g., 1430).")
 
-def get_header_footer() -> tuple[str, str]:
-    hor_line = "+-" + "-+-".join(["-" * col.print_width for col in COLUMNS]) + "-+"
-    header = "| " + " | ".join([col.name.ljust(col.print_width) for col in COLUMNS]) + " |"
-    return hor_line + '\n' + header + '\n' + hor_line, hor_line
+def format_header_footer() -> tuple[str, str]:
+    hrz_line = "+-" + "-+-".join(["-" * col.width for col in COLUMNS]) + "-+"
+    lbl_line = "| " + " | ".join([col.format_label() for col in COLUMNS]) + " |"
+    return hrz_line + '\n' + lbl_line + '\n' + hrz_line, hrz_line
 
-def get_formatted_rows(record: list[tuple]) -> str:
-    hor_line = "\n+-" + "-+-".join(["-" * col.print_width for col in COLUMNS]) + "-+\n"
+def format_records(records: list[tuple]) -> str:
+    hrz_line = "\n+-" + "-+-".join(["-" * col.width for col in COLUMNS]) + "-+\n"
 
-    fmt_rows = []
-    for row in record:
-        fmt_vals = []
-        for val, col in zip(row, COLUMNS):
-            # Convert numbers to str and trim to fit print width
-            val = str(val)[:col.print_width]
-            match col.print_align:
-                case "left":
-                    fmt_val = val.ljust(col.print_width)
-                case "center":
-                    fmt_val = val.center(col.print_width)
-                case "right":
-                    fmt_val = val.rjust(col.print_width)
-                case _:
-                    raise ValueError("\nInvalid column alignment format!")
-            fmt_vals.append(fmt_val)
-        fmt_row = "| " + " | ".join(fmt_vals) + " |"
-        fmt_rows.append(fmt_row)
+    val_lines = []
+    for record in records:
+        val_line = "| " + " | ".join([col.format_value(val)
+                                      for col, val in zip(COLUMNS, record)]) + " |"
+        val_lines.append(val_line)
 
-    return hor_line.join(fmt_rows)
+    return hrz_line.join(val_lines)
 
