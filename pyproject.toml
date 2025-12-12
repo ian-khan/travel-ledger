@@ -3,19 +3,29 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "travel_ledger"
-version = "2025.10.16"
-description = "A travel expenses ledger with statistic analysis"
+name = "travel-ledger"
+version = "0.1.0"
+description = "A ledger tool for managing and analyzing expenses made in trips and travels"
 authors = [{ name = "Ian Khan" }]
-readme = "README.md"
 requires-python = ">=3.9"
+dependencies = [
+    "pandas >= 2.0",
+    "openpyxl >= 3.0",
+]
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+keywords = ["travel", "ledger", "finance", "database"]
+homepage = "https://github.com/ian-khan/travel-ledger"
+repository = "https://github.com/ian-khan/travel-ledger"
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Operating System :: OS Independent",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [project.scripts]
 travel-ledger = "travel_ledger.main:main"
-travel-ledger-init = "travel_ledger.main:main_init"
-travel-ledger-add = "travel_ledger.main:main_add"
-travel-ledger-edit = "travel_ledger.main:main_edit"
-travel-ledger-export = "travel_ledger.main:main_export"

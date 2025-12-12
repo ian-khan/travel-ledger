@@ -108,17 +108,8 @@ class Column:
             value = default_value if use_default else self.format_counted_items(items, counts)
         return value
 
-COLUMNS: list[Column] = [
-    Column("ID", "INTEGER PRIMARY KEY AUTOINCREMENT", "Should not set manually", 2),
-    Column("Date", "TEXT NOT NULL", "YYYY-mm-dd or YYmmdd", 10),
-    Column("Time", "TEXT", "HH:MM or HHMM", 5),
-    Column("City", "TEXT", "", 5),
-    Column("Place", "TEXT", "", 24),
-    Column("Amount", "REAL NOT NULL", "JPY", 7),
-    Column("Payer", "TEXT", "", 5, choices=("Ian", "Momo")),
-    Column("Method", "TEXT", "", 6, choices=("Cash", "Card", "Wechat", "Alipay")),
-    Column("Category", "TEXT", "", 9,
-           choices=("Hotel", "Transport", "Meal", "Shopping", "Donation", "Admission")),
-    Column("Items", "TEXT", "", 36, is_counted_items=True),
-    Column("Note", "TEXT", "", 4),
-]
+
+try:
+    from .columns_private import COLUMNS
+except ImportError:
+    from .columns_example import COLUMNS
