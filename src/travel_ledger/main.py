@@ -61,7 +61,7 @@ def main_insert(db_path: str):
 
 def main_update(db_path: str):
     # The 'ID' field should not be set manually
-    columns = deepcopy(COLUMNS)[1:]
+    columns = COLUMNS[1:]
     col_names = [col.name for col in COLUMNS]
 
     print("\nTip: Press Enter to reuse [values in the selected record]"
@@ -95,15 +95,9 @@ def main_update(db_path: str):
             # Fields to update for the selected record
             record_patch = {}
             for col in columns:
-                prompt = f">> {col.name} [{record[col.name]}]: "
-                new_val = input(prompt).strip()
-                if new_val == "":
-                    # Field value is unchanged; skip this field in the UPDATE SQL
-                    continue
-                elif new_val == "-":
-                    # Field value is set to empty string
-                    new_val = ""
-                record_patch.update({col.name: new_val})
+                new_val = col.prompt_and_get_value(record[col.name])
+                if new_val != record[col.name]:
+                    record_patch.update({col.name: new_val})
             # Verify and format the patch for the record
             if not record_patch:
                 print(f"\nNo update to be made to the record!")
