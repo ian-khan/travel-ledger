@@ -1,6 +1,8 @@
 import os
 import os.path as osp
 from copy import deepcopy
+from dataclasses import dataclass
+from typing import Callable, Optional
 
 from travel_ledger.config import STATE_FILE
 from travel_ledger.core.schema import COLUMNS
@@ -15,7 +17,6 @@ from travel_ledger.db.export import export_to_excel
 
 def main_create(db_path: str):
     create_table(db_path)
-    print("\nDatabase created!")
 
 def main_insert(db_path: str):
     # The 'ID' field should not be set manually
@@ -91,7 +92,7 @@ def main_update(db_path: str):
 
         # Try updating the selected record until succeed
         while True:
-            print(f"\nUpdating record id=={id_}")
+            print(f"\nUpdating record id={id_}")
             # Fields to update for the selected record
             record_patch = {}
             for col in columns:
@@ -219,47 +220,70 @@ def get_and_save_db_path() -> str:
         save_state_file(STATE_FILE, state_dict)
     return db_path
 
+
+@dataclass
+class Task:
+    key: str
+    description: str
+    completion: str
+    function: Optional[Callable] = None
+
+    @property
+    def input_prompt(self):
+        return f"{self.key}: {self.description}"
+
+    @property
+    def completion_prompt(self):
+        return f"\n{self.completion}!"
+
+
+TASKS = {
+    "0": Task("0", "Create database", "Database created", main_create),
+    "1": Task("1", "Insert record", "Insertion complete", main_insert),
+    "2": Task("2", "Update record", "Update complete", main_update),
+    "3": Task("3", "Delete record", "Deletion complete", main_delete),
+    "4": Task("4", "Print  record", "Printing complete", main_print),
+    "9": Task("9", "Export database", "Database exported", main_export),
+    "Q": Task("Q", "Quit program", "")
+}
+
 def main():
     print("\nWelcome to use the Travel Ledger!")
-    db_path = get_and_save_db_path()
 
-    print("\nWhat would you like to do?")
-    print("0. Create database")
-    print("1. Insert records")
-    print("2. Update records")
-    print("3. Delete records")
-    print("4. Print  records")
-    print("9. Export database")
-    choice = input("\nEnter your choice: ").strip()
+    # Seamlessly execute multiple tasks
+    while True:
+        # Ask user for the task to execute
+        print()
+        for task in TASKS.values():
+            print(task.input_prompt)
+        choice = input("\nWhat would you like to do? \n>> ").strip().upper()
 
-    match choice:
-        case "0":
-            print("Creating database...")
-            task_main = main_create
-        case "1":
-            print("Inserting records...")
-            task_main = main_insert
-        case "2":
-            print("Updating records...")
-            task_main = main_update
-        case "3":
-            print("Deleting records...")
-            task_main = main_delete
-        case "4":
-            print("Printing records...")
-            task_main = main_print
-        case "9":
-            task_main = main_export
-        case _:
-            print("Invalid choice!")
+        # Execute a task
+        task = TASKS.get(choice, None)
+        if task is None:  # User made an invalid choice
+            continue
+        elif task.function is None:  # User chose to quit program
             return
+        else:  # User chose a non-quitting task
+            while True:
+                # Prompt user to provide database path and save it to state file
+                db_path = get_and_save_db_path()
 
-    # Validate the database path
-    db_parent = osp.dirname(db_path)
-    is_create_task = task_main is main_create
-    if is_create_task and not osp.isdir(db_parent):
-        raise FileNotFoundError(f"{db_parent} should be an existing directory!")
-    if not is_create_task and not osp.isfile(db_path):
-        raise FileNotFoundError(f"{db_path} should be an existing file!")
+                # Validate the provided database path
+                db_parent = osp.dirname(db_path)
+                is_create_task = task.function is main_create
+                try:
+                    if is_create_task and not osp.isdir(db_parent):
+                        raise FileNotFoundError(f"\n{db_parent} should be an existing directory!")
+                    if not is_create_task and not osp.isfile(db_path):
+                        raise FileNotFoundError(f"\n{db_path} should be an existing file!")
+                except FileNotFoundError as e:
+                    print(e)
+                    input("Press Enter to specify another one...")
+                    continue
 
-    task_main(db_path)
+                # Database path validated
+                break
+
+            task.function(db_path)
+            print(task.completion_prompt)

@@ -63,7 +63,10 @@ class Column:
 
     def prompt_and_get_value(self, default_value: Optional[str]=None) -> str:
         """
-        Prompt user to enter value for this column.
+        Prompt user to enter value for this column and return it.
+        For ordinary columns, press Enter to use the default value; press '-' then Enter to clear the field.
+        For counted-items columns, press Enter to use the default value; press '-' then Enter when inputting
+        item names to stop adding items.
         :param default_value: Default value to return if no value is entered.
         :return: Value for this column.
         """
