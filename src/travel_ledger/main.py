@@ -7,8 +7,7 @@ from typing import Callable, Optional
 from travel_ledger.config import STATE_FILE
 from travel_ledger.core.schema import COLUMNS
 from travel_ledger.core.state import load_state_file, save_state_file
-from travel_ledger.core.formatting import (validate_and_format_values,
-                                           format_header_footer,
+from travel_ledger.core.formatting import (format_header_footer,
                                            format_records)
 from travel_ledger.db.operations import (create_table,
                                          insert_record, update_record, delete_record,
@@ -19,9 +18,6 @@ def main_create(db_path: str):
     create_table(db_path)
 
 def main_insert(db_path: str):
-    # The 'ID' field should not be set manually
-    columns = deepcopy(COLUMNS)[1:]
-
     # Load the last inserted record from the state dict
     # last_record should not contain the 'id' field
     state_dict = load_state_file(STATE_FILE)
@@ -34,22 +30,17 @@ def main_insert(db_path: str):
     add_more = True
     while add_more:
         print()
-        for col in columns:
+        new_record = {}
+        for col in COLUMNS[1:]:  # The 'ID' field should not be set manually
             last_val = last_record.get(col.name, None)
             val = col.prompt_and_get_value(last_val)
-            last_record.update({col.name: val})
+            new_record.update({col.name: val})
 
-        try:
-            validate_and_format_values(last_record)
-        except ValueError as e:
-            print(e)
-            input("Press Enter to continue...")
-            continue
-
-        insert_record(db_path, last_record)
+        insert_record(db_path, new_record)
         print("\nRecord inserted!")
 
         # Save the last record everytime a record is inserted
+        last_record = new_record
         state_dict.update({"last_record": last_record})
         save_state_file(STATE_FILE, state_dict)
 
@@ -61,8 +52,6 @@ def main_insert(db_path: str):
                 break
 
 def main_update(db_path: str):
-    # The 'ID' field should not be set manually
-    columns = COLUMNS[1:]
     col_names = [col.name for col in COLUMNS]
 
     print("\nTip: Press Enter to reuse [values in the selected record]"
@@ -71,6 +60,7 @@ def main_update(db_path: str):
     # Recursively update multiple records
     update_more = True
     while update_more:
+        # Ask user for a record ID
         try:
             id_ = int(input("\nEnter the ID of the record to update: ").strip())
         except ValueError:
@@ -90,35 +80,33 @@ def main_update(db_path: str):
             continue
         record = dict(zip(col_names, record))
 
-        # Try updating the selected record until succeed
-        while True:
-            print(f"\nUpdating record id={id_}")
-            # Fields to update for the selected record
-            record_patch = {}
-            for col in columns:
-                new_val = col.prompt_and_get_value(record[col.name])
-                if new_val != record[col.name]:
-                    record_patch.update({col.name: new_val})
-            # Verify and format the patch for the record
-            if not record_patch:
-                print(f"\nNo update to be made to the record!")
-            else:
-                try:
-                    validate_and_format_values(record_patch)
-                except ValueError as e:
-                    print(e)
-                    input("Press Enter to update again.")
-                    continue
-                update_record(db_path, id_, record_patch)
-                print("\nRecord updated!")
-            break
+        # Ask user for new values for the selected record
+        print(f"\nUpdating record id={id_}")
+        record_patch = {}  # Fields to update for the selected record
+        for col in COLUMNS[1:]:  # The 'ID' field should not be set manually
+            new_val = col.prompt_and_get_value(record[col.name])
+            if new_val != record[col.name]:
+                record_patch.update({col.name: new_val})
 
-        # Print the updated record
-        updated_record = fetch_one_record(db_path, id_)
-        updated_record = dict(zip(col_names, updated_record))
-        print("\nUpdated record:")
-        for col, val in updated_record.items():
-            print(f"<> {col}: {val}")
+        if record_patch:
+            # Update the record
+            update_record(db_path, id_, record_patch)
+            print("\nRecord updated!")
+
+            # Print the updated record
+            updated_record = fetch_one_record(db_path, id_)
+            updated_record = dict(zip(col_names, updated_record))
+            print("\nUpdated record:")
+            for col, val in updated_record.items():
+                print(f"<> {col}: {val}")
+
+            # Update the state file
+            updated_record.pop("ID")
+            state_dict = load_state_file(STATE_FILE)
+            state_dict.update({"last_record": updated_record})
+            save_state_file(STATE_FILE, state_dict)
+        else:
+            print(f"\nNo update to be made to the record!")
 
         # Ask whether to another record
         while True:
@@ -126,12 +114,6 @@ def main_update(db_path: str):
             if choice == 'y' or choice == 'n':
                 update_more = True if choice == 'y' else False
                 break
-
-    if record != updated_record:
-        updated_record.pop("ID")
-        state_dict = load_state_file(STATE_FILE)
-        state_dict.update({"last_record": updated_record})
-        save_state_file(STATE_FILE, state_dict)
 
 def main_delete(db_path: str):
     col_names = [col.name for col in COLUMNS]
