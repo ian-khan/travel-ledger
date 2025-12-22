@@ -49,7 +49,7 @@ def validate_and_format_values(record: dict):
 
 def format_header_footer() -> tuple[str, str]:
     hrz_line = "+-" + "-+-".join(["-" * col.width for col in COLUMNS]) + "-+"
-    lbl_line = "| " + " | ".join([col.format_label() for col in COLUMNS]) + " |"
+    lbl_line = "| " + " | ".join([col.format_printed_label() for col in COLUMNS]) + " |"
     return hrz_line + '\n' + lbl_line + '\n' + hrz_line, hrz_line
 
 def format_records(records: list[tuple]) -> str:
@@ -57,7 +57,7 @@ def format_records(records: list[tuple]) -> str:
 
     val_lines = []
     for record in records:
-        val_line = "| " + " | ".join([col.format_value(val)
+        val_line = "| " + " | ".join([col.format_printed_value(val)
                                       for col, val in zip(COLUMNS, record)]) + " |"
         val_lines.append(val_line)
 
