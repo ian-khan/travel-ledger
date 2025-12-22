@@ -1,11 +1,13 @@
 import sqlite3
 import pandas as pd
 import os.path as osp
+from .statements import build_select_all_stmt
 
 def export_to_excel(db_path: str, out_path: str = None):
     """Export all expense records to an Excel file."""
     con = sqlite3.connect(db_path)
-    df = pd.read_sql_query("SELECT * FROM expenses", con)
+    stmt = build_select_all_stmt()
+    df = pd.read_sql_query(stmt, con)
     con.close()
 
     if df.empty:
