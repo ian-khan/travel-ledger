@@ -277,13 +277,11 @@ def main():
                         raise FileNotFoundError(f"\n{db_parent} should be an existing directory!")
                     if not is_create_task and not osp.isfile(db_path):
                         raise FileNotFoundError(f"\n{db_path} should be an existing file!")
+                    break  # Database path validated
                 except FileNotFoundError as e:
                     print(e)
-                    input("Press Enter to specify another one...")
+                    input("Press Enter to specify another one.")
                     continue
-
-                # Database path validated
-                break
 
             task.function(db_path)
             print(task.completion_prompt)
