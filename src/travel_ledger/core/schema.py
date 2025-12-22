@@ -11,7 +11,7 @@ class Column:
     width: int
     align: str = "left"
     choices: Optional[tuple[str, ...]] = None
-    parse_function: Optional[Callable] = None
+    validate_format: Optional[Callable] = None
     is_counted_items: bool = False
 
     @property
@@ -79,11 +79,14 @@ class Column:
         :param default_value: Default value to return if no value is entered.
         :return: Value for this column.
         """
-        hint_prompt = "" if self.hint == "" else f" ({self.hint})"
-        # When default value is absent, omit value prompt
-        # When it is present, even if it's empty string, it is prompted
+        # When hint is None or "", omit hint prompt
+        hint_prompt = "" if not self.hint else f" ({self.hint})"
+        # When default value is absent (None), omit value prompt
+        # When it is present, even if it's empty string (""), it is prompted
         value_prompt = "" if default_value is None else f" [{default_value}]"
+        default_value = "" if default_value is None else default_value
 
+        # Validate column value's format and choice
         while True:
             try:
                 if not self.is_counted_items:
@@ -97,43 +100,40 @@ class Column:
                     prompt = f"{self.name}{hint_prompt}{value_prompt}"
                     print(prompt)
 
-                    use_default, items, counts, i = False, [], [], 1
-                    add_item = True
+                    items, counts, use_default = [], [], False
+                    # Recursively add items and validate item names
                     while True:
-                        while True:
-                            try:
-                                item = input(f"  >> Item : ").strip()
-                                if item == "":  # Use the default value or empty string
-                                    if i != 1:
-                                        raise ValueError("To use the default value, press Enter "
-                                                         "when prompted to enter the first item. "
-                                                         "To stop adding items, press '-'.")
+                        try:
+                            item = input(f"  >> Item : ").strip()
+                            if item == "":  # Use the default value or empty string
+                                if len(items) == 0:  # Ensure no items have been added
                                     use_default = True
-                                    add_item = False
-                                elif item == "-":
-                                    add_item = False  # Stop adding item
-                            except ValueError as e:
-                                print(e)
-                                continue
-                            break
-                        if not add_item:
-                            break
-                        items.append(item)
+                                    break
+                                raise ValueError("To stop adding items, enter '-' (dash) "
+                                                 "and press Enter.")
+                            elif item == "-":  # Stop adding items
+                                break
+                            items.append(item)  # Add another item
 
-                        while True:
-                            try:
-                                count = input(f"  >> Count: ").strip()
-                                count = int(count)
-                            except ValueError as e:
-                                continue
-                            break
-                        counts.append(count)
+                            # Validate item counts
+                            while True:
+                                try:
+                                    count = input(f"  >> Count: ").strip()
+                                    count = int(count)
+                                    counts.append(count)
+                                    break
+                                except ValueError as e:
+                                    print(e)
+                                    continue
 
-                        i = i + 1
+                        except ValueError as e:
+                            print(e)
+                            continue
+
                     value = default_value if use_default else self.format_counted_items(items, counts)
 
-                if self.parse_function is not None:
-                    value = self.parse_function(value)
+                if self.validate_format is not None:
+                    value = self.validate_format(value)
                 if self.choices is not None:
                     value = self.validate_choice(value)
                 return value
@@ -141,7 +141,6 @@ class Column:
             except ValueError as e:
                 print(e)
                 continue
-            break
 
 try:
     from .columns_private import COLUMNS
