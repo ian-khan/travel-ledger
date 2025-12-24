@@ -13,6 +13,7 @@ class Column:
     choices: Optional[tuple[str, ...]] = None
     validate_format: Optional[Callable] = None
     is_counted_items: bool = False
+    as_groups: bool = False
 
     @property
     def prompt(self):

@@ -1,17 +1,15 @@
-import os
 import os.path as osp
-from copy import deepcopy
 from dataclasses import dataclass
 from typing import Callable, Optional
 
 from travel_ledger.config import STATE_FILE
 from travel_ledger.core.schema import COLUMNS
 from travel_ledger.core.state import load_state_file, save_state_file
-from travel_ledger.core.formatting import (format_header_footer,
-                                           format_records)
+from travel_ledger.core.formatting import format_header_footer, format_records, format_summary
 from travel_ledger.db.operations import (create_table,
                                          insert_record, update_record, delete_record,
-                                         fetch_one_record, fetch_all_records)
+                                         fetch_one_record, fetch_all_records,
+                                         sum_records_by_group)
 from travel_ledger.db.export import export_to_excel
 
 def main_create(db_path: str):
@@ -176,6 +174,19 @@ def main_print(db_path: str):
     print(footer)
     return
 
+def main_summarize(db_path: str):
+    records = fetch_all_records(db_path)
+    if records is None:
+        print("\nNo records in the database!")
+        return
+
+    for col in COLUMNS:
+        if col.as_groups:
+            summed_records = sum_records_by_group(db_path, col.name)
+            summary = format_summary(col.name, summed_records)
+            print(summary)
+    return
+
 def main_export(db_path: str):
     out_path = input("Enter output file path or press Enter "
                      "to save beside database: ").strip() or None
@@ -216,15 +227,16 @@ class Task:
 
     @property
     def completion_prompt(self):
-        return f"\n{self.completion}!"
+        return f"{self.completion}!"
 
 
 TASKS = {
     "0": Task("0", "Create database", "Database created", main_create),
-    "1": Task("1", "Insert record", "Insertion complete", main_insert),
-    "2": Task("2", "Update record", "Update complete", main_update),
-    "3": Task("3", "Delete record", "Deletion complete", main_delete),
-    "4": Task("4", "Print  record", "Printing complete", main_print),
+    "1": Task("1", "Insert records", "Insertion complete", main_insert),
+    "2": Task("2", "Update records", "Update complete", main_update),
+    "3": Task("3", "Delete records", "Deletion complete", main_delete),
+    "4": Task("4", "Print  records", "Printing complete", main_print),
+    "5": Task("5", "Summarize records", "Summarization complete", main_summarize),
     "9": Task("9", "Export database", "Database exported", main_export),
     "Q": Task("Q", "Quit program", "")
 }

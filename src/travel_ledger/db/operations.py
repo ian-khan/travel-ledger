@@ -4,7 +4,8 @@ from travel_ledger.db.statements import (build_create_table_stmt,
                                          build_update_stmt_params,
                                          build_delete_stmt_params,
                                          build_select_one_stmt,
-                                         build_select_all_stmt)
+                                         build_select_all_stmt,
+                                         build_sum_by_group_stmt)
 from contextlib import closing
 from typing import Any, Optional, Sequence
 
@@ -59,3 +60,8 @@ def fetch_all_records(db_path: str) -> Optional[list[tuple]]:
     stmt = build_select_all_stmt()
     records = execute(db_path, stmt, fetch='all')
     return records
+
+def sum_records_by_group(db_path: str, col_name: str) -> Optional[list[tuple]]:
+    stmt = build_sum_by_group_stmt(col_name)
+    summed_records = execute(db_path, stmt, fetch='all')
+    return summed_records

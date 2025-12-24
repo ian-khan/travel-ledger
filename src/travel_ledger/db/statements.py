@@ -54,3 +54,7 @@ def build_select_one_stmt():
 def build_select_all_stmt():
     stmt = "SELECT * FROM expenses ORDER BY date ASC, time ASC, id ASC"
     return stmt
+
+def build_sum_by_group_stmt(col_name: str):
+    stmt = f"SELECT {col_name}, SUM(amount) FROM expenses GROUP BY {col_name} ORDER BY {col_name}"
+    return stmt
