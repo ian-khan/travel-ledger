@@ -11,6 +11,8 @@ def validate_date_format(value: str) -> str:
     return value
 
 def validate_time_format(value: str) -> str:
+    if value == "":  # Allow absent time
+        return value
     if value.isdigit() and len(value) == 4:
         value = f"{value[:2]}:{value[2:]}"
     try:
