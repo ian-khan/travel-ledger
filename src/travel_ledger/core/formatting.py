@@ -18,14 +18,16 @@ def format_records(records: list[tuple]) -> str:
 
 def format_summary(col_name: str, summed_records: list[tuple]) -> str:
     widths = [14, 14, 14]
-    labels = [col_name, "Amount (JPN)", "Proportion (%)"]
     hrz_line = "+-" + "-+-".join(["-" * width for width in widths]) + "-+\n"
+    labels = [col_name, "Amount (JPN)", "Proportion (%)"]
     lbl_line = "| " + " | ".join([label.ljust(width)
                                   for label, width in zip(labels, widths)]) + " |\n"
     all_groups_sum = sum([group_sum for _, group_sum in summed_records])
     grp_lines = []
     for group_name, group_sum in summed_records:
-        entries = [group_name, round(group_sum, 1), round((group_sum / all_groups_sum * 100), 1)]
+        entries = [group_name,
+                   round(group_sum, 1),
+                   0.0 if all_groups_sum == 0 else round((group_sum / all_groups_sum * 100), 1)]
         grp_line = "| " + " | ".join([str(entry)[:width].ljust(width)
                                       for entry, width in zip(entries, widths)]) + " |\n"
         grp_lines.append(grp_line)
