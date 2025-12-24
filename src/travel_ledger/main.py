@@ -183,6 +183,11 @@ def main_summarize(db_path: str):
     for col in COLUMNS:
         if col.as_groups:
             summed_records = sum_records_by_group(db_path, col)
+            # Handle the edge case where all values for a column as groups are empty
+            if not summed_records:
+                print(f"\nNo data for grouping by {col.name}!")
+                continue
+
             summary = format_summary(col.name, summed_records)
             print(summary)
     return

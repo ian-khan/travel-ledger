@@ -62,7 +62,7 @@ def fetch_all_records(db_path: str) -> Optional[list[tuple]]:
     records = execute(db_path, stmt, fetch='all')
     return records
 
-def sum_records_by_group(db_path: str, col: Column) -> Optional[list[tuple]]:
+def sum_records_by_group(db_path: str, col: Column) -> list[tuple]:
     """
     Sum the amount of expenses by group
     :param db_path: The database path
@@ -71,4 +71,4 @@ def sum_records_by_group(db_path: str, col: Column) -> Optional[list[tuple]]:
     """
     stmt = build_sum_by_group_stmt(col)
     summed_records = execute(db_path, stmt, fetch='all')
-    return summed_records
+    return summed_records or []
