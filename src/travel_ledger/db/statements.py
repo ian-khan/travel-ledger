@@ -1,4 +1,4 @@
-from travel_ledger.core.schema import COLUMNS
+from travel_ledger.core.schema import Column, COLUMNS
 
 def build_create_table_stmt():
     columns = ",\n    ".join(f"{col.name} {col.sql_type}" for col in COLUMNS)
@@ -55,6 +55,6 @@ def build_select_all_stmt():
     stmt = "SELECT * FROM expenses ORDER BY date ASC, time ASC, id ASC"
     return stmt
 
-def build_sum_by_group_stmt(col_name: str):
-    stmt = f"SELECT {col_name}, SUM(amount) FROM expenses GROUP BY {col_name} ORDER BY {col_name}"
+def build_sum_by_group_stmt(col: Column):
+    stmt = f"SELECT {col.name}, SUM(amount) FROM expenses GROUP BY {col.name} ORDER BY {col.name}"
     return stmt

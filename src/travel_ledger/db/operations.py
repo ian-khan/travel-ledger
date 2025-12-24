@@ -1,4 +1,5 @@
 import sqlite3
+from travel_ledger.core.schema import Column
 from travel_ledger.db.statements import (build_create_table_stmt,
                                          build_insert_stmt_params,
                                          build_update_stmt_params,
@@ -61,7 +62,13 @@ def fetch_all_records(db_path: str) -> Optional[list[tuple]]:
     records = execute(db_path, stmt, fetch='all')
     return records
 
-def sum_records_by_group(db_path: str, col_name: str) -> Optional[list[tuple]]:
-    stmt = build_sum_by_group_stmt(col_name)
+def sum_records_by_group(db_path: str, col: Column) -> Optional[list[tuple]]:
+    """
+    Sum the amount of expenses by group
+    :param db_path: The database path
+    :param col: The column to use as groups
+    :return: The summed records [(group, summed amount), ...]
+    """
+    stmt = build_sum_by_group_stmt(col)
     summed_records = execute(db_path, stmt, fetch='all')
     return summed_records

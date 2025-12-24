@@ -182,7 +182,7 @@ def main_summarize(db_path: str):
 
     for col in COLUMNS:
         if col.as_groups:
-            summed_records = sum_records_by_group(db_path, col.name)
+            summed_records = sum_records_by_group(db_path, col)
             summary = format_summary(col.name, summed_records)
             print(summary)
     return
